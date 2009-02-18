@@ -1,0 +1,55 @@
+#lang scheme
+(require scheme/date)
+;;message 
+
+(define *messages* (list))
+
+(define-struct msg (datetime text for)
+  #:prefab)
+
+
+(define (disp/n text)
+  (display text)
+  (display (newline)))
+
+(define (pp-datetime dt)
+  (string-join (list (date->string dt) 
+                              (number->string (date-hour dt)) ":"
+                              (number->string (date-minute dt)) ":"
+                              (number->string (date-second dt))) " "))
+
+(define (display-msgs)
+  (map (lambda (m) (display-msg m) (display (newline))) *messages*))
+            
+            
+(define (display-msg msg)
+  (disp/n (msg-text msg))
+  (disp/n (pp-datetime (seconds->date (msg-datetime msg)))))
+  
+;;refactor to utility
+(define (str-split str ch)
+  (let ((len (string-length str)))
+    (letrec
+      ((split
+        (lambda (a b)
+          (cond
+            ((>= b len) (if (= a b) '() (cons (substring str a b) '())))
+            ((char=? ch (string-ref str b)) (if (= a b)
+                                              (split (+ 1 a) (+ 1 b))
+                                              (cons (substring str a b) (split b b))))
+            (else (split a (+ 1 b)))))))
+      (split 0 0))))
+
+
+(define (make-msg-text txt)
+  (define (extract-for txt)
+  (and (string? txt)
+       (let ((f (car (str-split txt #\space))))
+         (if (equal? (string-ref f 0) #\@) 
+             (string->symbol f) 
+            '@root))))
+  (make-msg (current-seconds) txt (extract-for txt)))
+
+(define (add-msg msg) (set! *messages* (cons msg *messages*)))
+
+
