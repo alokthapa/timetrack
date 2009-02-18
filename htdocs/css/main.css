@@ -1,0 +1,28 @@
+
+
+body
+{
+    font-family:Lucida Grande, courier
+}
+
+
+.t1
+{
+    font-size:197%;
+    padding: 5px;
+}
+
+.ask
+{
+    font-size: 153.9%;
+    padding: 2px;
+}
+
+
+.text-input
+{
+    width: 500px;
+    padding: 5px;
+    margin-bottom: 20px;
+}
+

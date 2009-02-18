@@ -1,59 +1,76 @@
 #lang scheme
 
-(require (planet "leftparen.scm" ("vegashacker" "leftparen.plt" 4 (= 1))) "app.scm")
+(require (planet "leftparen.scm" ("vegashacker" "leftparen.plt" 4 (= 1))) 
+	 "app.scm")
 
 (define (page-links)
-  (**
+  (list 
    `(p ,(web-link "Home" (page-url index-page)))
-   `(p ,(web-link "Bookmarks" (page-url bm-page)))))
+   `(p ,(web-link "Bookmarks" (page-url bm-page)))
+   `(p ,(web-link "Tags" (page-url tag-page)))))
 
 (define (pagelayout yeild)
   (**
-   `(h1 "timeTrack")
-   `(br)
-   (page-links)
-   (yeild)))
+   `(div ((class "yui-t4") (id "doc"))
+	 (div ((id "hd"))
+	      (p ((class "t1")) "timeTrack"))
+	 (div ((id "bd"))
+	      (div ((id "yui-main"))
+		   ,@(yeild))
+	      ;;(p "this is the main content"))
+	      (div ((class "yui-b"))
+		 ,@(page-links)))
+	 (div ((id "ft"))
+	      (p "brought to you by cddar.com")))))
    
 (define-page (bm-page req)
-  (**
-   `(h1 "timeTrack")
-   `(br)
-   (page-links)
-   `(p "Bookmarks")
-   `(p ,@(disp-messages (filter (lambda (m) (match-url (msg-text m))) (get-msgs))))))
+  (pagelayout 
+   (lambda ()
+     (** 
+      `(p "Bookmarks")
+      `(p "all the links that you added will appear here")
+      `(p ,@(disp-messages (filter (lambda (m) (match-url (msg-text m))) (get-msgs))))))))
+ 
+(define-page (tag-page req)
+  (pagelayout
+   (lambda ()
+     `(p "all the tags that you can find..."))))
 
 (define-page (index-page req)
-  (**
-   `(h1 "timeTrack")
-   `(br)
-   (page-links)
-   `(p "What say you?")
-   (form '((body "" long-text))
-	 #:on-done (lambda (post)
-		     (add-msg (make-msg-text (rec-prop post 'body)))
-		     (redirect-to-page index-page)))
-   `(p  ,@(disp-messages (get-msgs)))
-   ))
-   
-
-
+  #:css (list "css/reset-fonts-grids.css" "css/main.css")
+  #:title "timeTrack"
+  (pagelayout
+   (lambda ()
+     (list 
+      `(p ((class "ask")) "What say you?")
+      (form '((body "" long-text))
+	    #:on-done (lambda (post)
+			(when (rec-prop post 'body)
+			      (add-msg (make-msg-text (rec-prop post 'body))))
+			(redirect-to-page index-page))
+	    #:submit-label "update"
+	    #:skip-save #t)
+      
+      `(p  ,@(disp-messages (get-msgs)))))))
 
 (define (disp-messages msgs)
-  (map (lambda (m) (disp-message m)) msgs))
+  (list 
+   `(div 
+     ,@(map (lambda (m) (disp-message m)) msgs))))
  
-
 (define (disp-message msg)
   (**
-  `(p ,(msg-text msg))
-  `(p ,(pp-datetime (seconds->date (msg-datetime msg))))))
+   `(div
+     (p ,(msg-text msg))
+     (p ,(pp-datetime (seconds->date (msg-datetime msg)))))))
 
 ;;this should really go into a different page
 (require scheme/date)
 
 (define *messages* (list))
 
-
 (define (get-msgs) *messages*)
+
 (define-struct msg (datetime text for)
   #:prefab)
 
