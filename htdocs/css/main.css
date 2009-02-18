@@ -2,20 +2,30 @@
 
 body
 {
-    font-family:Lucida Grande, courier
+    font-family:Lucida Grande, courier;
+    color:#555555;
 }
 
+
+a hover,
+a visited,
+{
+    text-decoration:none;
+    color: #55555;
+}
 
 .t1
 {
     font-size:197%;
     padding: 5px;
+    background-color:#cccccc
 }
 
-.ask
+.t2
 {
     font-size: 153.9%;
-    padding: 2px;
+    padding-top: 10px;
+
 }
 
 
@@ -26,3 +36,40 @@ body
     margin-bottom: 20px;
 }
 
+#ft
+{
+    margin-top: 20px;
+    background-color:#cccccc
+}
+
+.msg
+{
+    border-style: dotted;
+    border-width: 1px;
+    margin-top: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.txt
+{
+    font-size: 123%;
+    padding: 5px;
+}
+
+
+.dt
+{
+    font-size: 85%;
+    text-align:right;
+    padding-right: 5px;
+    color:#bbbbbb;
+}
+
+
+.msgs
+{
+    width: 500px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}

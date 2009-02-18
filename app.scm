@@ -5,4 +5,5 @@
 (define-app my-app 
   (index-page (url "/"))
   (bm-page (url "/bm"))
-  (tag-page (url "/tags")))
+  (tag-page (url "/tags"))
+  (test-page (url "/test")))
