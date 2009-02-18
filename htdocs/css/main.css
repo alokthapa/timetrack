@@ -7,12 +7,22 @@ body
 }
 
 
-a hover,
-a visited,
+a
 {
     text-decoration:none;
     color: #55555;
 }
+a:visited
+{
+    color: #555555;
+}
+
+a:hover
+{
+    background-color: black;
+    color: white;
+}
+
 
 .t1
 {

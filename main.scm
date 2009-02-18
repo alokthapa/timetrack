@@ -43,7 +43,7 @@
  
 (define-page (tag-page req)
   #:design pgdesign
-  `(p "all the tags that you can find..."))
+  `(p ((class "t2")) "Tags"))
 
 (define-page (index-page req)
   #:design pgdesign
