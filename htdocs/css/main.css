@@ -12,7 +12,8 @@ a
     text-decoration:none;
     color: #55555;
 }
-a:visited
+
+a:visited, a:link, a:active, a:hover
 {
     color: #555555;
 }
