@@ -34,10 +34,20 @@
                    (equal? (string-ref t 0) #\@)))
 	    tokens)))
   
+(define outputfile "outputfile")
+
+;; read and write from a file
+(define (write-messages)
+  (with-output-to-file outputfile
+    (lambda () (write *messages*))
+    #:exists 'replace))
+
 (define (make-msg-text txt)
   (make-msg (current-seconds) txt (extract-tags txt)))
 
-(define (add-msg msg) (set! *messages* (cons msg *messages*)))
+(define (add-msg msg) 
+  (set! *messages* (cons msg *messages*))
+  (write-messages))
 
 (define (match-url str)
   (regexp-match #px"(https?://)?[\\w]*.?[\\w]+.(com|net|org|edu)" str))
@@ -46,12 +56,9 @@
   (remove-duplicates 
    (flatten (map (lambda (m) (msg-tags m)) msgs))))
 
-;;for testing purposes only
-
-(add-msg (make-msg-text "here goes nothing"))
-
-(add-msg (make-msg-text "another job for @work"))
-
-(add-msg (make-msg-text "I can't find any @work"))
-
-(add-msg (make-msg-text "m @sad today really"))
+(define (read-messages)
+  (define (log-missing-exn-handler exn)
+    (add-msg (make-msg-text "first post")))
+  (with-handlers ((exn? log-missing-exn-handler))
+    (set! *messages* (with-input-from-file outputfile read))))
+  

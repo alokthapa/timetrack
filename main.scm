@@ -25,6 +25,7 @@
 ;;pages
 (define-page (index-page req)
   #:design pgdesign
+  (read-messages)
   (** 
    `(p ((class "t2")) "What say you?")
    (form '((body "" long-text))
@@ -38,12 +39,14 @@
 
 (define-page (bm-page req)
   #:design pgdesign
+  (read-messages)
   (**
    `(p ((class "t2")) "Bookmarks")
    (disp-messages (filter (lambda (m) (match-url (msg-text m))) (get-msgs)))))
  
 (define-page (tag-page req tag)
   #:design pgdesign
+  (read-messages)
   (**
    `(p ((class "t2")) "Tags")
    (disp-messages (filter (lambda (m) (member tag (msg-tags m))) (get-msgs)))))
