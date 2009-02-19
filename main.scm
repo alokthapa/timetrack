@@ -12,7 +12,7 @@
 				(**
 				 `(div ((class "yui-t4") (id "doc"))
 				       (div ((id "hd"))
-					    (p ((class "t1")) "timeTrack"))
+					    (p ((class "t1")) ,(web-link "timeTrack" (page-url index-page))))
 				       (div ((id "bd"))
 					    (div ((id "yui-main"))
 						 ,bd)
@@ -21,8 +21,6 @@
 						 ,@(page-links)))
 				       (div ((id "ft"))
 					    (p "brought to you by cddar.com")))))))
-
-
 
 ;;pages
 (define-page (index-page req)

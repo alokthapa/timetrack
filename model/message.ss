@@ -26,19 +26,6 @@
 		      (number->string (date-minute dt)) ":"
 		      (number->string (date-second dt))) ) " "))
 
-;;refactor to utility
-(define (str-split str ch)
-  (let ((len (string-length str)))
-    (letrec
-      ((split
-        (lambda (a b)
-          (cond
-            ((>= b len) (if (= a b) '() (cons (substring str a b) '())))
-            ((char=? ch (string-ref str b)) (if (= a b)
-                                              (split (+ 1 a) (+ 1 b))
-                                              (cons (substring str a b) (split b b))))
-            (else (split a (+ 1 b)))))))
-      (split 0 0))))
 
 (define (extract-tags txt)
   (let ((tokens (regexp-split #rx"[ \n]" txt)))
