@@ -20,7 +20,7 @@
 					    (div ((class "yui-b"))
 						 ,@(page-links)))
 				       (div ((id "ft"))
-					    (p "brought to you by cddar.com")))))))
+					    (p "brought to you by cdadar.com")))))))
 
 ;;pages
 (define-page (index-page req)
@@ -32,8 +32,8 @@
 		     (when (rec-prop post 'body)
 			   (add-msg (make-msg-text (rec-prop post 'body))))
 		     (redirect-to-page index-page))
-	 #:submit-label "update")
-;;	 #:skip-save #t)
+	 #:submit-label "update"
+	 #:skip-save #t)
    (disp-messages (get-msgs))))
 
 (define-page (bm-page req)
