@@ -1,5 +1,141 @@
-#lang scheme/base
+#lang scheme
 
-(require (planet "leftparen.scm" ("vegashacker" "leftparen.plt" 4 (= 1))) "app.scm")
+(require (planet "leftparen.scm" ("vegashacker" "leftparen.plt" 4 (= 1))) 
+	 "app.scm")
 
-(define-page (index-page req) "Hello, World!")
+;;layout 
+(define pgdesign (design 
+		  #:css '("/css/reset-fonts-grids.css" "/css/main.css")
+		  #:title "timeTrack"
+		  #:body-wrap (lambda (bd)
+				(**
+				 `(div ((class "yui-t4") (id "doc"))
+				       (div ((id "hd"))
+					    (p ((class "t1")) "timeTrack"))
+				       (div ((id "bd"))
+					    (div ((id "yui-main"))
+						 ,bd)
+					    ;;(p "this is the main content"))
+					    (div ((class "yui-b"))
+						 ,@(page-links)))
+				       (div ((id "ft"))
+					    (p "brought to you by cddar.com")))))))
+
+
+
+;;pages
+(define-page (index-page req)
+  #:design pgdesign
+  (** 
+   `(p ((class "t2")) "What say you?")
+   (form '((body "" long-text))
+	 #:on-done (lambda (post)
+		     (when (rec-prop post 'body)
+			   (add-msg (make-msg-text (rec-prop post 'body))))
+		     (redirect-to-page index-page))
+	 #:submit-label "update")
+;;	 #:skip-save #t)
+   (disp-messages (get-msgs))))
+
+(define-page (bm-page req)
+  #:design pgdesign
+  (**
+   `(p ((class "t2")) "Bookmarks")
+   (disp-messages (filter (lambda (m) (match-url (msg-text m))) (get-msgs)))))
+ 
+(define-page (tag-page req tag)
+  #:design pgdesign
+  (**
+   `(p ((class "t2")) "Tags")
+   (disp-messages (filter (lambda (m) (member tag (msg-tags m))) (get-msgs)))))
+
+(define-page (test-page req)
+  #:design pgdesign
+  (** "hello" '(br) " world"))
+
+;; partials
+
+(define (page-links)
+  (list 
+   `(p ,(web-link "Home" (page-url index-page)))
+   `(p ,(web-link "Bookmarks" (page-url bm-page)))
+   `(br)
+   `(div ,@(map (lambda (t)
+                  `(p ,(web-link t (page-url tag-page t)))) (get-all-tags (get-msgs))))))
+
+(define (disp-messages msgs)
+  (if (empty? msgs)
+      `(p)
+      `(div ((class "msgs"))
+              ,@(map (lambda (m) (disp-message m)) msgs))))
+ 
+(define (disp-message msg)
+  (**
+   `(div ((class "msg"))
+     (p ((class "txt")) ,(rep-newline (msg-text msg)))
+     (p ((class "dt")) ,(pp-datetime (seconds->date (msg-datetime msg)))))))
+
+;;this should really go into a different page
+(require scheme/date)
+
+(define (rep-newline str)
+  str)
+  ;(regexp-replace* #rx"\r\n" str " <br /> "))
+
+(define *messages* (list))
+
+(define (get-msgs) *messages*)
+
+(define-struct msg (datetime text tags)
+  #:prefab)
+
+(define (pp-datetime dt)
+  (string-join (list (date->string dt) 
+		     (string-append 
+		      (number->string (date-hour dt)) ":"
+		      (number->string (date-minute dt)) ":"
+		      (number->string (date-second dt))) ) " "))
+
+;;refactor to utility
+(define (str-split str ch)
+  (let ((len (string-length str)))
+    (letrec
+      ((split
+        (lambda (a b)
+          (cond
+            ((>= b len) (if (= a b) '() (cons (substring str a b) '())))
+            ((char=? ch (string-ref str b)) (if (= a b)
+                                              (split (+ 1 a) (+ 1 b))
+                                              (cons (substring str a b) (split b b))))
+            (else (split a (+ 1 b)))))))
+      (split 0 0))))
+
+(define (extract-tags txt)
+  (let ((tokens (regexp-split #rx"[ \n]" txt)))
+    (filter (lambda (t)
+              (and (> (string-length t) 0)
+                   (equal? (string-ref t 0) #\@)))
+	    tokens)))
+  
+(define (make-msg-text txt)
+  (make-msg (current-seconds) txt (extract-tags txt)))
+
+(define (add-msg msg) (set! *messages* (cons msg *messages*)))
+
+(define (match-url str)
+  (regexp-match #px"(https?://)?[\\w]*.?[\\w]+.(com|net|org|edu)" str))
+
+(define (get-all-tags msgs)
+  (remove-duplicates 
+   (flatten (map (lambda (m) (msg-tags m)) msgs))))
+
+;;for testing purposes only
+
+(add-msg (make-msg-text "here goes nothing"))
+
+(add-msg (make-msg-text "another job for @work"))
+
+(add-msg (make-msg-text "I can't find any @work"))
+
+(add-msg (make-msg-text "m @sad today really"))
+

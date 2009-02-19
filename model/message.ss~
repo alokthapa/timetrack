@@ -7,7 +7,6 @@
 (define-struct msg (datetime text for)
   #:prefab)
 
-
 (define (disp/n text)
   (display text)
   (display (newline)))

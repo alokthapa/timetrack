@@ -1,30 +1,31 @@
 #lang scheme
 (require scheme/date)
+
 ;;message 
+
+(provide (all-defined-out))
+
+
+(require scheme/date)
+
+(define (rep-newline str)
+  str)
+  ;(regexp-replace* #rx"\r\n" str " <br /> "))
 
 (define *messages* (list))
 
-(define-struct msg (datetime text for)
-  #:prefab)
+(define (get-msgs) *messages*)
 
-(define (disp/n text)
-  (display text)
-  (display (newline)))
+(define-struct msg (datetime text tags)
+  #:prefab)
 
 (define (pp-datetime dt)
   (string-join (list (date->string dt) 
-                              (number->string (date-hour dt)) ":"
-                              (number->string (date-minute dt)) ":"
-                              (number->string (date-second dt))) " "))
+		     (string-append 
+		      (number->string (date-hour dt)) ":"
+		      (number->string (date-minute dt)) ":"
+		      (number->string (date-second dt))) ) " "))
 
-(define (display-msgs)
-  (map (lambda (m) (display-msg m) (display (newline))) *messages*))
-            
-            
-(define (display-msg msg)
-  (disp/n (msg-text msg))
-  (disp/n (pp-datetime (seconds->date (msg-datetime msg)))))
-  
 ;;refactor to utility
 (define (str-split str ch)
   (let ((len (string-length str)))
@@ -39,16 +40,31 @@
             (else (split a (+ 1 b)))))))
       (split 0 0))))
 
-
+(define (extract-tags txt)
+  (let ((tokens (regexp-split #rx"[ \n]" txt)))
+    (filter (lambda (t)
+              (and (> (string-length t) 0)
+                   (equal? (string-ref t 0) #\@)))
+	    tokens)))
+  
 (define (make-msg-text txt)
-  (define (extract-for txt)
-  (and (string? txt)
-       (let ((f (car (str-split txt #\space))))
-         (if (equal? (string-ref f 0) #\@) 
-             (string->symbol f) 
-            '@root))))
-  (make-msg (current-seconds) txt (extract-for txt)))
+  (make-msg (current-seconds) txt (extract-tags txt)))
 
 (define (add-msg msg) (set! *messages* (cons msg *messages*)))
 
+(define (match-url str)
+  (regexp-match #px"(https?://)?[\\w]*.?[\\w]+.(com|net|org|edu)" str))
 
+(define (get-all-tags msgs)
+  (remove-duplicates 
+   (flatten (map (lambda (m) (msg-tags m)) msgs))))
+
+;;for testing purposes only
+
+(add-msg (make-msg-text "here goes nothing"))
+
+(add-msg (make-msg-text "another job for @work"))
+
+(add-msg (make-msg-text "I can't find any @work"))
+
+(add-msg (make-msg-text "m @sad today really"))

@@ -1,20 +1,12 @@
 #lang scheme
 
 (require (planet "leftparen.scm" ("vegashacker" "leftparen.plt" 4 (= 1))) 
-	 "app.scm")
+	 "app.scm" 
+	 "model/message.ss")
 
-(define (page-links)
-  (list 
-   `(p ,(web-link "Home" (page-url index-page)))
-   `(p ,(web-link "Bookmarks" (page-url bm-page)))
-   `(p ,(web-link "Tags" (page-url tag-page)))))
-
-(define-page (test-page req)
-  #:design pgdesign
-  "hello world")
-		 
+;;layout 
 (define pgdesign (design 
-		  #:css '("css/reset-fonts-grids.css" "css/main.css")
+		  #:css '("/css/reset-fonts-grids.css" "/css/main.css")
 		  #:title "timeTrack"
 		  #:body-wrap (lambda (bd)
 				(**
@@ -30,21 +22,9 @@
 				       (div ((id "ft"))
 					    (p "brought to you by cddar.com")))))))
 
-   
-(define-page (bm-page req)
-  #:design pgdesign
-  (**
-   `(p ((class "t2")) "Bookmarks")
-   (let ((msgs (filter (lambda (m) (match-url (msg-text m))) (get-msgs))))
-      (if (empty? msgs)
-	  `(p)
-	  `(p ,@(disp-messages msgs))))))
-;;   `(p ,@(disp-messages (filter (lambda (m) (match-url (msg-text m))) (get-msgs))))))
- 
-(define-page (tag-page req)
-  #:design pgdesign
-  `(p ((class "t2")) "Tags"))
 
+
+;;pages
 (define-page (index-page req)
   #:design pgdesign
   (** 
@@ -54,68 +34,46 @@
 		     (when (rec-prop post 'body)
 			   (add-msg (make-msg-text (rec-prop post 'body))))
 		     (redirect-to-page index-page))
-	 #:submit-label "update"
-	 #:skip-save #t)
-   `(p  ,@(disp-messages (get-msgs)))))
+	 #:submit-label "update")
+;;	 #:skip-save #t)
+   (disp-messages (get-msgs))))
+
+(define-page (bm-page req)
+  #:design pgdesign
+  (**
+   `(p ((class "t2")) "Bookmarks")
+   (disp-messages (filter (lambda (m) (match-url (msg-text m))) (get-msgs)))))
+ 
+(define-page (tag-page req tag)
+  #:design pgdesign
+  (**
+   `(p ((class "t2")) "Tags")
+   (disp-messages (filter (lambda (m) (member tag (msg-tags m))) (get-msgs)))))
+
+(define-page (test-page req)
+  #:design pgdesign
+  (** "hello" '(br) " world"))
+
+;; partials
+
+(define (page-links)
+  (list 
+   `(p ,(web-link "Home" (page-url index-page)))
+   `(p ,(web-link "Bookmarks" (page-url bm-page)))
+   `(br)
+   `(div ,@(map (lambda (t)
+                  `(p ,(web-link t (page-url tag-page t)))) (get-all-tags (get-msgs))))))
 
 (define (disp-messages msgs)
-  (list 
-   `(div ((class "msgs"))
-     ,@(map (lambda (m) (disp-message m)) msgs))))
+  (if (empty? msgs)
+      `(p)
+      `(div ((class "msgs"))
+              ,@(map (lambda (m) (disp-message m)) msgs))))
  
 (define (disp-message msg)
   (**
    `(div ((class "msg"))
-     (p ((class "txt")) ,(msg-text msg))
+     (p ((class "txt")) ,(rep-newline (msg-text msg)))
      (p ((class "dt")) ,(pp-datetime (seconds->date (msg-datetime msg)))))))
 
-;;this should really go into a different page
-(require scheme/date)
 
-(define *messages* (list))
-
-(define (get-msgs) *messages*)
-
-(define-struct msg (datetime text for)
-  #:prefab)
-
-(define (pp-datetime dt)
-  (string-join (list (date->string dt) 
-		     (string-append 
-		      (number->string (date-hour dt)) ":"
-		      (number->string (date-minute dt)) ":"
-		      (number->string (date-second dt))) ) " "))
-
-;;refactor to utility
-(define (str-split str ch)
-  (let ((len (string-length str)))
-    (letrec
-      ((split
-        (lambda (a b)
-          (cond
-            ((>= b len) (if (= a b) '() (cons (substring str a b) '())))
-            ((char=? ch (string-ref str b)) (if (= a b)
-                                              (split (+ 1 a) (+ 1 b))
-                                              (cons (substring str a b) (split b b))))
-            (else (split a (+ 1 b)))))))
-      (split 0 0))))
-
-
-(define (make-msg-text txt)
-  (define (extract-for txt)
-  (and (string? txt)
-       (let ((f (car (str-split txt #\space))))
-         (if (equal? (string-ref f 0) #\@) 
-             (string->symbol f) 
-            '@root))))
-  (make-msg (current-seconds) txt (extract-for txt)))
-
-(define (add-msg msg) (set! *messages* (cons msg *messages*)))
-
-(add-msg (make-msg-text "here goes nothing"))
-
-(add-msg (make-msg-text "another job"))
-
-
-(define (match-url str)
-  (regexp-match #px"(https?://)?[\\w]*.?[\\w]+.(com|net|org|edu)" str))
