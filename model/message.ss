@@ -58,7 +58,11 @@
 
 (define (read-messages)
   (define (log-missing-exn-handler exn)
-    (add-msg (make-msg-text "first post")))
+    (add-msg (make-msg-text "Welcome to timeTrack"))
+    (add-msg (make-msg-text "just post a url like www.cdadar.com and it will show up in bookmarks"))
+    (add-msg (make-msg-text "@todo you can add a new tag"))
+    (add-msg (make-msg-text "the tags will show up dynamically as you add them, for eg., @home working on @timetrack will create two tags"))
+    (add-msg (make-msg-text "you can also create schedules like @sch 5 pm pick up the kids")))
   (with-handlers ((exn? log-missing-exn-handler))
     (set! *messages* (with-input-from-file outputfile read))))
   
