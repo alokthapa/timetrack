@@ -14,6 +14,10 @@
 
 (define *messages* (list))
 
+(define (delete-msg msg)
+  (set! *messages* (remove msg *messages*))
+  (write-messages))
+
 (define (get-msgs) *messages*)
 
 (define-struct msg (datetime text tags)

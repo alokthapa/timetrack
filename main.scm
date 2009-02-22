@@ -75,6 +75,8 @@
   (**
    `(div ((class "msg"))
      (p ((class "txt")) ,(rep-newline (msg-text msg)))
-     (p ((class "dt")) ,(pp-datetime (seconds->date (msg-datetime msg)))))))
-
+     (p ((class "dt")) ,(pp-datetime (seconds->date (msg-datetime msg))))
+     (p ((class "delete")) ,(web-link "delete" (body-as-url (r)
+					 (delete-msg msg)
+					 (redirect-to-page index-page)))))))
 
