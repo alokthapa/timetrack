@@ -42,7 +42,7 @@
   (read-messages)
   (**
    `(p ((class "t2")) "Bookmarks")
-   (disp-messages (filter (lambda (m) (match-url (msg-text m))) (get-msgs)))))
+   (disp-messages (filter (lambda (m) (member "@bm" (msg-tags m))) (get-msgs)))))
  
 (define-page (tag-page req tag)
   #:design pgdesign

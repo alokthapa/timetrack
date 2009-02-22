@@ -1,54 +1,95 @@
 #lang scheme
 (require scheme/date)
+
 ;;message 
+
+(provide (all-defined-out))
+
+
+(require scheme/date)
+
+(define (rep-newline str)
+  str)
+  ;(regexp-replace* #rx"\r\n" str " <br /> "))
 
 (define *messages* (list))
 
-(define-struct msg (datetime text for)
-  #:prefab)
+(define (get-msgs) *messages*)
 
-(define (disp/n text)
-  (display text)
-  (display (newline)))
+(define-struct msg (datetime text tags)
+  #:prefab)
 
 (define (pp-datetime dt)
   (string-join (list (date->string dt) 
-                              (number->string (date-hour dt)) ":"
-                              (number->string (date-minute dt)) ":"
-                              (number->string (date-second dt))) " "))
+		     (string-append 
+		      (number->string (date-hour dt)) ":"
+		      (number->string (date-minute dt)) ":"
+		      (number->string (date-second dt))) ) " "))
 
-(define (display-msgs)
-  (map (lambda (m) (display-msg m) (display (newline))) *messages*))
-            
-            
-(define (display-msg msg)
-  (disp/n (msg-text msg))
-  (disp/n (pp-datetime (seconds->date (msg-datetime msg)))))
+
+(define (extract-tags txt)
+  (let ((tokens (regexp-split #rx"[ \n]" txt)))
+    (filter (lambda (t)
+              (and (> (string-length t) 0)
+                   (equal? (string-ref t 0) #\@)))
+	    tokens)))
   
-;;refactor to utility
-(define (str-split str ch)
-  (let ((len (string-length str)))
-    (letrec
-      ((split
-        (lambda (a b)
-          (cond
-            ((>= b len) (if (= a b) '() (cons (substring str a b) '())))
-            ((char=? ch (string-ref str b)) (if (= a b)
-                                              (split (+ 1 a) (+ 1 b))
-                                              (cons (substring str a b) (split b b))))
-            (else (split a (+ 1 b)))))))
-      (split 0 0))))
+(define outputfile "outputfile")
 
+;; read and write from a file
+(define (write-messages)
+  (with-output-to-file outputfile
+    (lambda () (write *messages*))
+    #:exists 'replace))
 
 (define (make-msg-text txt)
-  (define (extract-for txt)
-  (and (string? txt)
-       (let ((f (car (str-split txt #\space))))
-         (if (equal? (string-ref f 0) #\@) 
-             (string->symbol f) 
-            '@root))))
-  (make-msg (current-seconds) txt (extract-for txt)))
+  (make-msg (current-seconds) txt (extract-tags txt)))
 
-(define (add-msg msg) (set! *messages* (cons msg *messages*)))
+(define (add-msg msg) 
+  (set! *messages* (cons msg *messages*))
+  (write-messages))
 
+(define (match-url str)
+  (regexp-match #px"\\b
 
+  (
+    (https?)://[-\\w]+(\\.\\w[-\\w]*)+
+  |
+    (?i: [a-z0-9] (?:[-a-z0-9]*[a-z0-9])? \\. )+ 
+    (?-i: com\\b
+        | edu\\b
+        | biz\\b
+        | gov\\b
+        | in(?:t|fo)\\b 
+        | mil\\b
+        | net\\b
+        | org\\b
+        | [a-z][a-z]\\.[a-z][a-z]\\b # two-letter country code
+    )
+  )
+  ( : \\d+ )?
+
+  (
+    /
+    [^.!,?;\"\\'<>()\[\]\{\}\s\x7F-\\xFF]*
+    (
+      [.!,?]+ [^.!,?;\"\\'<>()\\[\\]\{\\}\s\\x7F-\\xFF]+
+    )*
+  )?" str))
+
+;;  (regexp-match #px"(https?://)?[\\w]*.?[\\w]+.(com|net|org|edu)" str))
+
+(define (get-all-tags msgs)
+  (remove-duplicates 
+   (flatten (map (lambda (m) (msg-tags m)) msgs))))
+
+(define (read-messages)
+  (define (log-missing-exn-handler exn)
+    (add-msg (make-msg-text "Welcome to timeTrack"))
+    (add-msg (make-msg-text "just post a url like www.cdadar.com and it will show up in bookmarks"))
+    (add-msg (make-msg-text "@todo you can add a new tag"))
+    (add-msg (make-msg-text "the tags will show up dynamically as you add them, for eg., @home working on @timetrack will create two tags"))
+    (add-msg (make-msg-text "you can also create schedules like @sch 5 pm pick up the kids")))
+  (with-handlers ((exn? log-missing-exn-handler))
+    (set! *messages* (with-input-from-file outputfile read))))
+  
