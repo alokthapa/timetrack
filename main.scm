@@ -4,6 +4,14 @@
 	 "app.scm" 
 	 "model/message.ss")
 
+;;opening lines
+(define openlines (list "What say you?"
+			"Say what?"
+			"You don't say..."
+			"Unburden yourself"
+			"Speak"
+			"Talk to me"))
+			
 ;;layout 
 (define pgdesign (design 
 		  #:css '("/css/reset-fonts-grids.css" "/css/main.css")
@@ -16,7 +24,6 @@
 				       (div ((id "bd"))
 					    (div ((id "yui-main"))
 						 ,bd)
-					    ;;(p "this is the main content"))
 					    (div ((class "yui-b"))
 						 ,@(page-links)))
 				       (div ((id "ft"))
@@ -27,7 +34,7 @@
   #:design pgdesign
   (read-messages)
   (** 
-   `(p ((class "t2")) "What say you?")
+   `(p ((class "t2")) ,(random-choice openlines))
    (form '((body "" long-text))
 	 #:on-done (lambda (post)
 		     (when (rec-prop post 'body)
@@ -98,3 +105,5 @@
 	 (regexp-split #rx"\r\n" str))))
   
 
+(define (random-choice lst)
+  (list-ref lst (random (length lst))))
