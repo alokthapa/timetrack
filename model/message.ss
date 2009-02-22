@@ -20,6 +20,7 @@
 
 (define (get-msgs) *messages*)
 
+
 (define-struct msg (datetime text tags)
   #:prefab)
 

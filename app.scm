@@ -6,4 +6,5 @@
   (index-page (url "/"))
   (bm-page (url "/bm"))
   (tag-page (url "/tag/" (string-arg)))
+  ;;  (msg-page (url "/msg/" (string-arg)))
   (test-page (url "/test")))

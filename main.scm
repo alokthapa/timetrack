@@ -37,6 +37,14 @@
 	 #:skip-save #t)
    (disp-messages (get-msgs))))
 
+;;(define-page (msg-page req)
+;;  #:design pgdesign
+;;  (read-messages)
+;;  (**
+;;   `(p ((class "t2")) "Bookmarks")
+;;   (disp-messages (filter (lambda (m) (member "@bm" (msg-tags m))) (get-msgs)))))
+;;
+  
 (define-page (bm-page req)
   #:design pgdesign
   (read-messages)
@@ -74,9 +82,19 @@
 (define (disp-message msg)
   (**
    `(div ((class "msg"))
-     (p ((class "txt")) ,(rep-newline (msg-text msg)))
+     (p ((class "txt")) ,(transform-html (msg-text msg)))
      (p ((class "dt")) ,(pp-datetime (seconds->date (msg-datetime msg))))
      (p ((class "delete")) ,(web-link "delete" (body-as-url (r)
 					 (delete-msg msg)
 					 (redirect-to-page index-page)))))))
+
+
+
+;;utility fns 
+
+(define (transform-html str)
+  `(p ,@(foldr (lambda (s r) (cons s (cons `(br) r)))
+	 '()
+	 (regexp-split #rx"\r\n" str))))
+  
 
