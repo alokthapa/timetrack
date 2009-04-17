@@ -29,7 +29,7 @@
 				       (div ((id "ft"))
 					    (p "brought to you by cdadar.com")))))))
 
-;;pages
+;;Pages
 (define-page (index-page req)
   #:design pgdesign
   (read-messages)
